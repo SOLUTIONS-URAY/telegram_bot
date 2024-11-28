@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 r = redis.Redis(
-    host="127.0.0.1",
-    password="",
-    port=6379,
+    host=os.getenv("REDHOST"),
+    password=os.getenv("REDPASS"),
+    port=os.getenv("REDPORT"),
     db=0,
     ssl=False,
 )

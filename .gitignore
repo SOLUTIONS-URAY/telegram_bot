@@ -22,7 +22,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-#.env
+.env
 .pybuild
 debian/tmp
 debian/python3-telegram
