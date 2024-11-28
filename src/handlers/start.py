@@ -9,6 +9,15 @@ import noti_sender
 
 referrals = {}
 
+NOTIFICATION_TEMPLATE_TO_NUMBER = {
+    0 : 'CHANGE_PRIORITY',
+    1 : 'CHANGE_TITLE',
+    2 :'CHANGE_ISSUED_USER',
+    3 :'CHANGE_ASSIGNED_USER',
+    4 :'CHANGE_STATUS',
+    5 :'ADD_COMMENTARY'
+}
+
 def register_start_handler(bot: TeleBot):
     @bot.message_handler(commands=['start'])
     def handle_start(message):
@@ -31,14 +40,15 @@ def register_start_handler(bot: TeleBot):
                     p = subscriber.subscribe_to_channel()
                     while True:
                         get_message = json.loads(subscriber.read_message(p))
-                        if get_message.get('user_api') != user_api:
+                        if get_message.get('uuid') != user_api:
                             continue
                         
                         noti_list = noti_type.list_notification_types()
+                        translate = NOTIFICATION_TEMPLATE_TO_NUMBER[get_message.get('type')]
                         for i in noti_list:
-                            if get_message.get('message_type') == i:
+                            if translate == i:
                                 noti_sender.register_notisender_handler(
-                                    bot, user_id, i, get_message.get('message')
+                                    bot, user_id, i, get_message.get('message'), get_message.get('ticket', {}).get('id')
                                 )
                 else:
                     bot.send_message(user_id, "❌Ошибка приглашения, попробуй ещё раз.")
