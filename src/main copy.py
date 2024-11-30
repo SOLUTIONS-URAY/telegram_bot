@@ -3,7 +3,7 @@ import logging
 import os
 import signal
 import sys
-import time
+
 import redis_sub
 
 from dotenv import load_dotenv
@@ -27,36 +27,37 @@ def init_bot():
     return bot
 
 
-def start_bot(bot):
+def start_bot():
+    bot = init_bot()
     register_handlers(bot)
-    Thread(target=bot.polling, daemon=True).start()
+    threading.Thread(target=bot.polling, daemon=True).start()
+    while True:
+        time.sleep(1)
+        if stop_thread is True:
+            bot.stop_polling()
+    
+def listen_redis():
     channel = os.getenv("CHANNEL")
+    bot = init_bot()
     if channel:
         pass
     else:
         logging.warning("CHANNEL environment variable is not set. Subscriptions won't work.")
         sys.exit()
     redis_sub.subscribe(bot, channel)
-    
-    while True:
-        time.sleep(1)
-        # if stop_thread is True:
-        #     bot.stop_polling()
 
 def main():
     global bot_thread
-    # global redis_thread
+    global redis_thread
 
-    bot = init_bot()
-
-    bot_thread = Thread(target=start_bot, args=(bot,), daemon=True)
-    # redis_thread = Thread(target=listen_redis, args=(bot,), daemon=True)
+    bot_thread = Thread(target=start_bot, args=(), daemon=True)
+    redis_thread = Thread(target=listen_redis, args=(), daemon=True)
 
     bot_thread.start()
-    # redis_thread.start()
+    redis_thread.start()
 
     bot_thread.join()
-    # redis_thread.join()
+    redis_thread.join()
 
 if __name__ == "__main__":
     main()
