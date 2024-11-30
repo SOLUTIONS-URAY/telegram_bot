@@ -23,7 +23,7 @@ def query(sql, paramas):
     print("dev1264")
     cursor = connection.cursor()
     try:
-        print("dev1242")
+        print("dev1242",sql, paramas)
         cursor.execute(sql, paramas)
         print("dev123234")
 

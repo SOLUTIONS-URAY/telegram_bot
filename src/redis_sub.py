@@ -50,12 +50,15 @@ def read_message(p):
 
 
 def getRecipientId(event):
+    print("In msg:", event)
     ticket = event["ticket"]
     userIds = []
-    userIds.append(ticket["assignedUser"]["id"])
+    if not ticket["assignedUser"] is None:
+        userIds.append(ticket["assignedUser"]["id"])
     userIds.append(ticket["issuedUser"]["id"])
-    userIds.remove(event["author"]["id"])
-    return userIds
+    if event["author"]["id"] in userIds:
+        userIds.remove(event["author"]["id"])
+    return [tuple([x]) for x in userIds]
 
 
 def subscribe(bot, channel):
@@ -80,16 +83,17 @@ def subscribe(bot, channel):
         logging.info(event["uuid"])
 
         userIds = getRecipientId(event)
-        
-        usersToSend = db.query('SELECT * FROM "telegram_match" WHERE "userId" = %s;', tuple(userIds))
-        print(usersToSend)
-        
-        telegramIds = [user[1] for user in usersToSend]
 
-        print(telegramIds)
 
-        for tgId in telegramIds:
-            try:
-                send_push(bot, tgId, NOTIFICATION_TYPES[event["type"]], event["message"], event["ticket"]["id"], event["ticket"]["title"]) 
-            except Exception as e:
-                print(e)
+        for userId in userIds:
+            userToSend = db.query('SELECT * FROM "telegram_match" WHERE "userId" = %s;', (userId,))
+            print("abf", userToSend)
+
+            if len(userToSend) > 0:
+                telegramId = userToSend[0][1]
+
+                print(telegramId)
+                try:
+                    send_push(bot, telegramId, NOTIFICATION_TYPES[event["type"]], event["message"], event["ticket"]["id"], event["ticket"]["title"])
+                except Exception as e:
+                    print(e)
